@@ -1,6 +1,6 @@
 # MMID: Multi-turn Multimodal Interactive Dialogue Benchmark
 
-We introduce the **Multi-turn Multimodal Interactive Dialogue (MMID) Benchmark**, in which user requirements are conveyed incrementally across multiple turns and images are interleaved with text throughout the conversation. This setup supports dynamic multimodal interaction and enables a comprehensive evaluation of MLLMs in terms of **Perception, Memorization, and Reasoning**.
+We introduce the **Multi-turn Multimodal Interactive Dialogue (MMID) Benchmark**, in which user requirements are conveyed incrementally across multiple turns and images are interleaved with text throughout the conversation. This setup supports dynamic multimodal interaction and enables a comprehensive evaluation of MLLMs in terms of **Perception, Memorization, and Reasoning**. With memorization commonly required in multi-turn settings, MMID consists of eight tasks designed to evaluate perception and reasoning in conjunction with memorization.
 
 MMID is derived from [KoMMERCE](https://github.com/MMC-K/multimodal_fashion_dialog_dataset).
 
