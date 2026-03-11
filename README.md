@@ -1,6 +1,12 @@
 # MMID: Multi-turn Multimodal Interactive Dialogue Benchmark
 
-The MMID benchmark folder currently contains only a subset of the data samples. The full dataset will be released after the paper is accepted.
+We introduce the **Multi-turn Multimodal Interactive Dialogue (MMID) Benchmark**, in which user requirements are conveyed incrementally across multiple turns and images are interleaved with text throughout the conversation. This setup supports dynamic multimodal interaction and enables a comprehensive evaluation of MLLMs in terms of **Perception, Memorization, and Reasoning**.
+
+MMID is derived from [KoMMERCE](https://github.com/MMC-K/multimodal_fashion_dialog_dataset).
+
+At present, the MMID benchmark folder includes only a subset of the data samples. The full dataset will be released after the paper is accepted.
+
+MMID is released under the **Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)** license.
 
 ## Evaluating MMID with Qwen3-VL-8B-Instruct
 
