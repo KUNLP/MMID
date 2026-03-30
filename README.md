@@ -54,3 +54,9 @@ python scripts/run_qwen3_vl_instruct.py \
 **Task 7: Visual Reference Recall** takes as input a dialogue containing multiple images and requires the model to judge the truthfulness of a sentence by jointly considering fine-grained visual attributes of each image and the user’s preferences toward those images. While Task 3 evaluates visual attribute perception for a single image, Task 7 extends this setting to assess the model’s ability to distinguish attributes across multiple images and integratively reason about user preferences based on dialogue context.
 
 **Task 8: Vision–Language Temporal Reconstruction** presents shuffled text-based dialogue segments as input and requires the model to reconstruct the correct temporal order of the dialogue based on the accompanying image(s). This task evaluates whether the model can integrate visual information with dialogue context to infer the temporal progression of the conversation.
+
+
+
+## Experimental Results
+
+For the overall experimental results on both the English and Korean versions, see [Experimental Results](./Experimental_Results.md).
