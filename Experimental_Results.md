@@ -47,11 +47,11 @@ Tables 1 and 2 present results for RQ1, evaluating whether MLLMs can perceive fi
 To better understand these limitations, we further analyze the error types in Tasks 3 and 4. We first examine why Task 3 Type 1 shows relatively low performance under the image-based input setting by comparing error type distributions across input settings.
 
 
-<img src='Task3_error_type_analysis.png' width='600'>
+<img src='Task3_error_type_analysis.png' width='1000'>
 
 **Figure 1: Error type distribution for Task 3 Type 1 under different input setting on the Korean version of MMID**
 
-<img src='error_type_dual__task3_type1.png' width='600'>
+<img src='error_type_dual__task3_type1.png' width='1000'>
 
 **Figure 2: Error type distribution for Task 3 Type 1 under different input setting on the English version of MMID**
 
@@ -115,11 +115,11 @@ In contrast to tasks centered on visual perception, where model performance vari
 To further analyze this trend, we examine representative results from Tasks 6 and 8.
 
 
-<img src='Task6_Type.png' width='600'>
+<img src='Task6_Type.png' width='1000'>
 
 **Figure 5: Error type distribution for Task 6 under different input setting on the Korean version of MMID**
 
-<img src='error_type_task6__type1_type2_image.png' width='600'>
+<img src='error_type_task6__type1_type2_image.png' width='1000'>
 
 **Figure 6: Error type distribution for Task 6 under different input setting on the English version of MMID**
 
