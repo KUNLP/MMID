@@ -47,12 +47,15 @@ Tables 1 and 2 present results for RQ1, evaluating whether MLLMs can perceive fi
 To better understand these limitations, we further analyze the error types in Tasks 3 and 4. We first examine why Task 3 Type 1 shows relatively low performance under the image-based input setting by comparing error type distributions across input settings.
 
 <p align="center">
-<img src='Task3_error_type_analysis.png' width='1000'>
+  <img src='Task3_error_type_analysis.png' width='1000'>
 </p>
+
 **Figure 1: Error type distribution for Task 3 Type 1 under different input setting on the Korean version of MMID**
+
 <p align="center">
 <img src='error_type_dual__task3_type1.png' width='1000'>
 </p>
+
 **Figure 2: Error type distribution for Task 3 Type 1 under different input setting on the English version of MMID**
 
 In both the Korean and English versions, visual perception errors account for a larger proportion of failures than Over-Editing or Under-Editing under the image-based input setting. Under the text-based input setting, the proportion of visual perception errors decreases relatively. This suggests that the low performance in Type 1 is primarily associated with difficulties in fine-grained perception of image-based attributes.
@@ -62,9 +65,11 @@ In both the Korean and English versions, visual perception errors account for a 
 </p>
 
 **Figure 3: Difference in error type distribution for Task 4 under image-based and text-based inputs on the Korean version of MMID**
+
 <p align="center">
   <img src='error_type_overlay__task4.png' width='600'>
 </p>
+
 **Figure 4: Difference in error type distribution for Task 4 under image-based and text-based inputs on the English version of MMID**
 
 The error analysis results for Task 4 are shown in Figures 3 and 4.
@@ -118,10 +123,13 @@ To further analyze this trend, we examine representative results from Tasks 6 an
 <p align="center">
   <img src='Task6_Type.png' width='1000'>
 </p>
+
 **Figure 5: Error type distribution for Task 6 under different input setting on the Korean version of MMID**
+
 <p align="center">
   <img src='error_type_task6__type1_type2_image.png' width='1000'>
 </p>
+
 **Figure 6: Error type distribution for Task 6 under different input setting on the English version of MMID**
 
 
@@ -130,10 +138,13 @@ According to Figures 5 and 6, models make relatively few visual attribute percep
 <p align="center">
   <img src='Task8.png' width='600'>
 </p>
+
 **Figure 7: Performance variation by dialogue segment length in Task 8 on the Korean version of MMID**
+
 <p align="center">
   <img src='utt_len__task8_type1__image_vs_tag.png' width='600'>
 </p>
+
 **Figure 8: Performance variation by dialogue segment length in Task 8 on the English version of MMID**
 
 
