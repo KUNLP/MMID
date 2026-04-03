@@ -23,7 +23,7 @@ Overall, the experimental results for both Perception–Memorization Ability (RQ
 | HyperCLOVAX 3B |               29.3 |         25.1 |                24.7 |               34.0 |                9.3 |                27.8 |               69.2 |               41.4 |         34.9 |        74.1 |        39.3 |
 | Average        |               19.0 |         32.5 |                27.5 |               62.6 |               35.1 |                35.8 |               74.2 |               38.4 |         42.0 |        75.4 |        33.4 |
 
-**Table1: Perception ability evaluation results of MLLMs on Tasks 1–4 on the Korean version of MMID (%)**
+**Table1: Perception ability evaluation results of MLLMs on Tasks 1–4 on the Korean version of MMID (%). Images and Tags denote results under the image-based and text-based input settings, respectively. Diff represents the difference between the two settings.**
 
 
 | Models | Task 1 (IoU) Image | Task 2 Image | Task 3 Type 1 Image | Task 3 Type 1 Tags | Task 3 Type 1 Diff | Task 3 Type 2 Image | Task 3 Type 2 Tags | Task 3 Type 2 Diff | Task 4 Image | Task 4 Tags | Task 4 Diff |
@@ -39,10 +39,10 @@ Overall, the experimental results for both Perception–Memorization Ability (RQ
 | InternVL2.5 2B |   18.1 |   26.0 |                27.2 |               68.0 |               40.8 |                25.6 |               60.3 |               34.7 |         44.5 |        75.6 |        31.1 |
 | Average        |   19.2 |   33.4 |                28.6 |               74.0 |               45.4 |                40.4 |               85.2 |               44.8 |         52.2 |        89.1 |        36.9 |
 
-**Table2: Perception ability evaluation results of MLLMs on Tasks 1–4 on the English version of MMID (%)**
+**Table2: Perception ability evaluation results of MLLMs on Tasks 1–4 on the English version of MMID (%). Images and Tags denote results under the image-based and text-based input settings, respectively. Diff represents the difference between the two settings.**
 
 
-Tables 1 and 2 present results for RQ1, evaluating whether MLLMs can perceive fine-grained visual information, align it with dialogue context, and retain that information over multi-turn interactions in both the Korean and English versions of MMID.  Across both language settings, MLLMs generally perform well at memorizing linguistic information, but still show clear limitations in fine-grained visual perception and text–image alignment. This is consistent with prior findings suggesting that current MLLMs still have structural limitations in visual perception.
+Tables 1 and 2 present results for RQ1, evaluating whether MLLMs can perceive fine-grained visual information, align it with dialogue context, and retain that information over multi-turn interactions in both the Korean and English versions of MMID. Across both language settings, MLLMs generally perform well under the text-based input setting, suggesting that they can effectively memorize linguistic information. In contrast, the lower performance under the image-based input setting reveals clear limitations in fine-grained visual perception and text–image alignment. This is consistent with prior findings suggesting that current MLLMs still have structural limitations in visual perception.
 
 To better understand these limitations, we further analyze the error types in Tasks 3 and 4. We first examine why Task 3 Type 1 shows relatively low performance under the image-based input setting by comparing error type distributions across input settings.
 
@@ -58,7 +58,7 @@ To better understand these limitations, we further analyze the error types in Ta
 
 **Figure 2: Error type distribution for Task 3 Type 1 under different input setting on the English version of MMID**
 
-In both the Korean and English versions, visual perception errors account for a larger proportion of failures than Over-Editing or Under-Editing under the image-based input setting. Under the text-based input setting, the proportion of visual perception errors decreases relatively. This suggests that the low performance in Type 1 is primarily associated with difficulties in fine-grained perception of image-based attributes.
+In both the Korean and English versions, the combined proportion of visual perception errors—namely global-style, structural-shape, and surface-level errors—is larger than that of Over-Editing or Under-Editing under the image-based input setting. Under the text-based input setting, the proportion of visual perception errors decreases relatively. This suggests that the low performance in Type 1 is primarily associated with difficulties in fine-grained perception of image-based attributes.
 
 <p align="center">
   <img src='Task4_Tag2Img.png' width='600'>
@@ -73,10 +73,11 @@ In both the Korean and English versions, visual perception errors account for a 
 **Figure 4: Difference in error type distribution for Task 4 under image-based and text-based inputs on the English version of MMID**
 
 The error analysis results for Task 4 are shown in Figures 3 and 4.
-Under the image-based input setting, the average accuracy remains low at 42.0% and 52.2% on the Korean and English versions, respectively, whereas it rises substantially to 75.4% and 89.1% under the text-based attribute setting. According to the error type analysis in Figures 3 and 4, where each value is defined as the image-based error proportion minus the text-based error proportion, surface-level errors related to low-level visual attributes such as color or print decrease, while structural-shape errors increase. These results suggest that MLLMs still struggle when they need to integrate multiple visual cues to reason about attributes.
+As shown in Table 1 and Table 2, the average accuracy under the image-based input setting remains low at 42.0% for the Korean version and 52.2% for the English version, whereas it rises substantially to 75.4% and 89.1%, respectively, under the text-based input setting. Figures 3 and 4 report the differences in error type proportions, with each value defined as the image-based error proportion minus the text-based error proportion. Under this comparison, surface-level errors related to low-level visual attributes such as color or print decrease, whereas structural-shape errors increase. These results suggest that MLLMs still struggle when they need to integrate multiple visual cues to reason about attributes.
 
 
-In contrast, global-style errors show different patterns across languages. In the Korean version, the proportion of global-style errors increases (Figure 3), whereas in the English version it decreases (Figure 4). One possible explanation is that global-style judgments are more sensitive to language-specific expressions than structural-shape judgments. Structural-shape errors mainly arise from difficulties in jointly understanding multiple image attributes and their relations, which makes them consistently more challenging under image-based inputs. By contrast, global-style judgments may rely more on abstract preference expressions in dialogue in addition to visual cues. For example, when the dialogue includes an utterance such as 'Then I also want to look for a street-style knit cable hoodie', the global-style preference is explicitly stated, making it easier for the model to use linguistic cues alongside visual information. Accordingly, differences in Korean and English expressions of style-related preferences may have contributed to the divergent error trends across the two versions.
+In contrast, global-style errors show different patterns across languages. In the Korean version, the proportion of global-style errors increases (Figure 3), whereas in the English version it decreases (Figure 4). One possible explanation is that global-style judgments are more sensitive to language-specific expressions than structural-shape judgments. Structural-shape errors mainly arise from difficulties in jointly understanding multiple image attributes and their relations, which makes them consistently more challenging under image-based inputs. 
+In comparison, global-style errors require understanding more global properties of the overall outfit, such as style or fit. As a result, global-style judgments may rely not only on visual cues but also on the user’s explicit preference or dispreference expressions in dialogue about the given image. For example, when the dialogue includes an utterance such as “Then I also want to look for a street-style knit cable hoodie,” the global-style preference is explicitly stated, making it easier for the model to use linguistic cues alongside visual information. Accordingly, the different error trends across the Korean and English versions may indicate that MLLM performance on global-style judgments is influenced by the language of the dialogue text, possibly because most models are pretrained predominantly on English text.
 
 
 Overall, these results suggest that current MLLMs are relatively capable of retaining and using dialogue-based requirements across languages, but fine-grained visual perception remains a major challenge.
@@ -98,7 +99,7 @@ Overall, these results suggest that current MLLMs are relatively capable of reta
 | HyperCLOVAX 3B |         25.9 |        25.5 |        -0.4 |                37.8 |               44.3 |                6.5 |                25.4 |               29.9 |                4.5 |         21.5 |        29.3 |         7.8 |                26.9 |               27.4 |                0.5 |                25.9 |               25.8 |               -0.1 |
 | Average        |         24.4 |        24.9 |         0.5 |                45.8 |               63.2 |               17.4 |                27.9 |               39.6 |               11.7 |         34.5 |        31.7 |        -2.9 |                32.0 |               33.8 |                1.8 |                25.3 |               24.8 |               -0.5 |
 
-**Table3: Reasoning ability evaluation results of MLLMs on Tasks 5–8 on the Korean version of MMID (%)**
+**Table3: Reasoning ability evaluation results of MLLMs on Tasks 5–8 on the Korean version of MMID (%). Images and Tags denote results under the image-based and text-based input settings, respectively. Diff represents the difference between the two settings.**
 
 | Models         | Task 5 Image | Task 5 Tags | Task 5 Diff | Task 6 Type 1 Image | Task 6 Type 1 Tags | Task 6 Type 1 Diff | Task 6 Type 2 Image | Task 6 Type 2 Tags | Task 6 Type 2 Diff | Task 7 Image | Task 7 Tags | Task 7 Diff | Task 8 Type 1 Image | Task 8 Type 1 Tags | Task 8 Type 1 Diff | Task 8 Type 2 Image | Task 8 Type 2 Tags | Task 8 Type 2 Diff |
 | -------------- | -----------: | ----------: | ----------: | ------------------: | -----------------: | -----------------: | ------------------: | -----------------: | -----------------: | -----------: | ----------: | ----------: | ------------------: | -----------------: | -----------------: | ------------------: | -----------------: | -----------------: |
@@ -113,12 +114,12 @@ Overall, these results suggest that current MLLMs are relatively capable of reta
 | InternVL2.5 2B |         27.4 |        25.0 |        -2.4 |                43.3 |               60.8 |               17.5 |                26.6 |               27.4 |                0.8 |         22.2 |        26.8 |         4.4 |                26.5 |               26.6 |                0.1 |                27.5 |               23.4 |               -4.1 |
 | Average        |         26.2 |        25.1 |        -1.1 |                51.6 |               69.8 |               18.2 |                31.9 |               52.7 |               20.8 |         40.8 |        36.4 |        -4.4 |                38.8 |               41.9 |                3.1 |                29.0 |               27.6 |               -1.4 |
 
-**Table4: Reasoning ability evaluation results of MLLMs on Tasks 5–8 on the English version of MMID (%)**
+**Table4: Reasoning ability evaluation results of MLLMs on Tasks 5–8 on the English version of MMID (%). Images and Tags denote results under the image-based and text-based input settings, respectively. Diff represents the difference between the two settings.**
 
 
 Tables 3 and 4 show whether MLLMs can accurately recall previously accumulated dialogue information and perform higher-level reasoning in Korean- and English-based multi-turn multimodal interactions. 
 In contrast to tasks centered on visual perception, where model performance varies more substantially across input settings, higher-level reasoning tasks show smaller performance differences between image-based and text-based settings.
-To further analyze this trend, we examine representative results from Tasks 6 and 8.
+To further analyze this trend, we present selected analyses from Tasks 6 and 8.
 
 <p align="center">
   <img src='Task6_Type.png' width='1000'>
