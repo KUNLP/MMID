@@ -46,24 +46,25 @@ Tables 1 and 2 present results for RQ1, evaluating whether MLLMs can perceive fi
 
 To better understand these limitations, we further analyze the error types in Tasks 3 and 4. We first examine why Task 3 Type 1 shows relatively low performance under the image-based input setting by comparing error type distributions across input settings.
 
-
+<p align="center">
 <img src='Task3_error_type_analysis.png' width='1000'>
-
+</p>
 **Figure 1: Error type distribution for Task 3 Type 1 under different input setting on the Korean version of MMID**
-
+<p align="center">
 <img src='error_type_dual__task3_type1.png' width='1000'>
-
+</p>
 **Figure 2: Error type distribution for Task 3 Type 1 under different input setting on the English version of MMID**
 
 In both the Korean and English versions, visual perception errors account for a larger proportion of failures than Over-Editing or Under-Editing under the image-based input setting. Under the text-based input setting, the proportion of visual perception errors decreases relatively. This suggests that the low performance in Type 1 is primarily associated with difficulties in fine-grained perception of image-based attributes.
 
-
-<img src='Task4_Tag2Img.png' width='600'>
+<p align="center">
+  <img src='Task4_Tag2Img.png' width='600'>
+</p>
 
 **Figure 3: Difference in error type distribution for Task 4 under image-based and text-based inputs on the Korean version of MMID**
-
-<img src='error_type_overlay__task4.png' width='600'>
-
+<p align="center">
+  <img src='error_type_overlay__task4.png' width='600'>
+</p>
 **Figure 4: Difference in error type distribution for Task 4 under image-based and text-based inputs on the English version of MMID**
 
 The error analysis results for Task 4 are shown in Figures 3 and 4.
@@ -114,25 +115,25 @@ Tables 3 and 4 show whether MLLMs can accurately recall previously accumulated d
 In contrast to tasks centered on visual perception, where model performance varies more substantially across input settings, higher-level reasoning tasks show smaller performance differences between image-based and text-based settings.
 To further analyze this trend, we examine representative results from Tasks 6 and 8.
 
-
-<img src='Task6_Type.png' width='1000'>
-
+<p align="center">
+  <img src='Task6_Type.png' width='1000'>
+</p>
 **Figure 5: Error type distribution for Task 6 under different input setting on the Korean version of MMID**
-
-<img src='error_type_task6__type1_type2_image.png' width='1000'>
-
+<p align="center">
+  <img src='error_type_task6__type1_type2_image.png' width='1000'>
+</p>
 **Figure 6: Error type distribution for Task 6 under different input setting on the English version of MMID**
 
 
 According to Figures 5 and 6, models make relatively few visual attribute perception errors (e.g., Positive Intra Attribute Editing and Positive Mid Attribute Editing), whereas a large proportion of errors arise from failures in reasoning about user preferences across multiple images. To further examine this pattern, we analyze Type 2, which specifically tests whether the model can distinguish images based on user preferences. In Type 2, errors caused by confusing attributes between preferred and non-preferred images (e.g., Negative2Positive Attribute Transfer and Positive2Negative Attribute Transfer) are more common than errors caused by incorrectly recalling the preference associated with a given image. Overall, these findings suggest that while MLLMs can partially retain attribute information for multiple images, they still struggle to align user preferences with attribute evidence when discriminating among images.
 
-
-<img src='Task8.png' width='600'>
-
+<p align="center">
+  <img src='Task8.png' width='600'>
+</p>
 **Figure 7: Performance variation by dialogue segment length in Task 8 on the Korean version of MMID**
-
-<img src='utt_len__task8_type1__image_vs_tag.png' width='600'>
-
+<p align="center">
+  <img src='utt_len__task8_type1__image_vs_tag.png' width='600'>
+</p>
 **Figure 8: Performance variation by dialogue segment length in Task 8 on the English version of MMID**
 
 
