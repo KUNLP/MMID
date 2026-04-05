@@ -37,7 +37,9 @@ Overall, the experimental results for both Perception–Memorization Ability (RQ
 | InternVL2.5 8B |   25.4 |   36.4 |                28.5 |               79.7 |               51.2 |                47.4 |               87.2 |               39.8 |         54.0 |        93.4 |        39.4 |
 | InternVL2.5 4B |   28.9 |   35.8 |                31.8 |               82.8 |               51.0 |                45.3 |               90.3 |               45.0 |         55.0 |        92.4 |        37.4 |
 | InternVL2.5 2B |   18.1 |   26.0 |                27.2 |               68.0 |               40.8 |                25.6 |               60.3 |               34.7 |         44.5 |        75.6 |        31.1 |
-| Average        |   19.2 |   33.4 |                28.6 |               74.0 |               45.4 |                40.4 |               85.2 |               44.8 |         52.2 |        89.1 |        36.9 |
+| HyperCLOVAX 3B |               39.6 |         26.8 |                26.5 |               43.5 |                7.0 |                25.6 |               62.5 |               36.9 |         45.8 |        60.1 |        14.3 |
+| Average |           28.6 |     32.8 |            28.4 |           70.9 |           41.5 |            38.9 |           82.9 |           44.0 |     51.5 |    86.2 |    34.7 |
+
 
 **Table2: Perception ability evaluation results of MLLMs on Tasks 1–4 on the English version of MMID (%). Images and Tags denote results under the image-based and text-based input settings, respectively. Diff represents the difference between the two settings.**
 
@@ -112,7 +114,8 @@ Overall, these results suggest that current MLLMs are relatively capable of reta
 | InternVL2.5 8B |         27.0 |        25.2 |        -1.8 |                52.8 |               69.4 |               16.6 |                33.5 |               61.9 |               28.4 |         27.8 |        35.0 |         7.2 |                44.5 |               44.9 |                0.4 |                32.8 |               30.1 |               -2.7 |
 | InternVL2.5 4B |         24.7 |        24.4 |        -0.3 |                56.1 |               72.6 |               16.5 |                34.8 |               55.5 |               20.7 |         35.2 |        33.8 |        -1.4 |                43.8 |               41.6 |               -2.2 |                35.0 |               33.0 |               -2.0 |
 | InternVL2.5 2B |         27.4 |        25.0 |        -2.4 |                43.3 |               60.8 |               17.5 |                26.6 |               27.4 |                0.8 |         22.2 |        26.8 |         4.4 |                26.5 |               26.6 |                0.1 |                27.5 |               23.4 |               -4.1 |
-| Average        |         26.2 |        25.1 |        -1.1 |                51.6 |               69.8 |               18.2 |                31.9 |               52.7 |               20.8 |         40.8 |        36.4 |        -4.4 |                38.8 |               41.9 |                3.1 |                29.0 |               27.6 |               -1.4 |
+| HyperCLOVAX 3B |         25.2 |        24.8 |        -0.4 |                36.6 |               50.8 |                14.2 |                24.6 |               34.4 |                9.8 |         28.0 |        27.8 |         -0.2 |                24.5 |               23.4 |                -1.1 |                25.4 |               0.0 |               -25.4 |
+| Average |     26.1 |    25.1 |    -1.1 |            50.1 |           67.9 |           17.8 |            31.2 |           50.8 |           19.7 |     39.5 |    35.5 |    -4.0 |            37.4 |           40.1 |            2.7 |            28.7 |           24.9 |           -3.8 |
 
 **Table4: Reasoning ability evaluation results of MLLMs on Tasks 5–8 on the English version of MMID (%). Images and Tags denote results under the image-based and text-based input settings, respectively. Diff represents the difference between the two settings.**
 
