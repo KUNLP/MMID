@@ -48,7 +48,8 @@ def kst_timestamp() -> str:
     return datetime.now(KST).strftime("%Y%m%d_%H%M%S")
 
 
-def list_benchmark_files() -> List[str]:
+def list_benchmark_files(language_arg: str) -> List[str]:
+    BENCHMARK_DIR = BENCHMARK_DIR / language_arg
     if not BENCHMARK_DIR.exists():
         return []
     files = sorted([p.name for p in BENCHMARK_DIR.glob("*.jsonl")])
@@ -75,8 +76,8 @@ def build_groups_from_files(files: List[str]) -> Dict[str, List[str]]:
     return groups
 
 
-def get_benchmarks_to_run(benchmark_args: list) -> list:
-    files = list_benchmark_files()
+def get_benchmarks_to_run(benchmark_args: list, language_arg: str) -> list:
+    files = list_benchmark_files(language_arg)
     groups = build_groups_from_files(files)
     
     if not benchmark_args:
@@ -220,6 +221,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--benchmarks", nargs="+", default=["all"],
                         help="groups: all, task1..task8, task1_type1, task1_type2, task8_type1, task8_type2 OR explicit *.jsonl")
+    parser.add_argument("--language", type=str, default="ko", choices=["ko", "en"])
     parser.add_argument("--models", nargs="+", default=None)
     parser.add_argument("--model_id", type=str, default=None)
     parser.add_argument("--device_map", type=str, default="cuda", choices=["cuda", "auto"])
@@ -253,7 +255,7 @@ def main():
     original_stdout = sys.stdout
 
 
-    print("-"*40, "\n[Benchmarks] ", args.benchmarks, "\n", "-"*40)
+    print("-"*40, "\n[Benchmarks] ", args.benchmarks, args.language, "\n", "-"*40)
 
     if not args.no_log:
         log_path = LOGS_DIR / f"run_qwen3_vl_{ts}.log"
@@ -262,7 +264,7 @@ def main():
         print(f"[LOG] Logging to: {log_path}")
 
     try:
-        benchmarks = get_benchmarks_to_run(args.benchmarks)
+        benchmarks = get_benchmarks_to_run(args.benchmarks, args.language)
 
         if not benchmarks:
             print(f"[ERROR] No benchmarks found to run. benchmark_dir={BENCHMARK_DIR}")
