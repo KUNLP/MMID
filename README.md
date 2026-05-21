@@ -17,6 +17,7 @@ To evaluate MMID using the `Qwen3-VL-8B-Instruct` model, run the following comma
 ```bash
 python scripts/run_qwen3_vl_instruct.py \
   --model_id Qwen/Qwen3-VL-8B-Instruct \
+  --language ko \
   --benchmarks all \
   --mode image \
   --template_key Image \
@@ -26,6 +27,7 @@ python scripts/run_qwen3_vl_instruct.py \
 
 python scripts/run_qwen3_vl_instruct.py \
   --model_id Qwen/Qwen3-VL-8B-Instruct \
+  --language ko \
   --benchmarks all \
   --mode tags \
   --template_key Tags \
