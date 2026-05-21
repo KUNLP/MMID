@@ -57,7 +57,7 @@ python scripts/run_qwen3_vl_instruct.py \
 
 **Task 8: Vision–Language Temporal Reconstruction** presents shuffled text-based dialogue segments as input and requires the model to reconstruct the correct temporal order of the dialogue based on the accompanying image(s). This task evaluates whether the model can integrate visual information with dialogue context to infer the temporal progression of the conversation.
 
-
+Detailed descriptions of KoMMERCE and the MMID benchmark construction process are provided in [Appendix.pdf](./Appendix.pdf).
 
 ## Experimental Results
 
