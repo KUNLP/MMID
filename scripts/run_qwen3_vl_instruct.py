@@ -49,10 +49,10 @@ def kst_timestamp() -> str:
 
 
 def list_benchmark_files(language_arg: str) -> List[str]:
-    BENCHMARK_DIR = BENCHMARK_DIR / language_arg
-    if not BENCHMARK_DIR.exists():
+    lang_benchmark_dir = BENCHMARK_DIR / language_arg
+    if not lang_benchmark_dir.exists():
         return []
-    files = sorted([p.name for p in BENCHMARK_DIR.glob("*.jsonl")])
+    files = sorted([p.name for p in lang_benchmark_dir.glob("*.jsonl")])
     return files
 
 
@@ -129,7 +129,7 @@ def infer_meta_from_filename(fname: str) -> Tuple[int, str, Optional[str], str]:
     else:
         qtype = "open"
 
-    if task_id == 4:
+    if task_id == 1:
         qtype = "open"
 
     return task_id, task_name, subtype, qtype
@@ -146,23 +146,24 @@ def run_one(
     save_prompts: bool,
     mode: str,
     template_key: str,
+    lang: str = "ko",
     question_ids: Optional[List[str]] = None,
     question_ids_file: Optional[str] = None,
     question_id_regex: Optional[str] = None,
-    
-    cache_dir: Optional[str] = None, 
-    count: int,  
+    cache_dir: Optional[str] = None,
+    count: int = -1,
 ):
     task_id, task_name, subtype, qtype = infer_meta_from_filename(benchmark_file)
 
-    bench_path = (BENCHMARK_DIR / benchmark_file)
+    lang_benchmark_dir = BENCHMARK_DIR / lang
+    bench_path = lang_benchmark_dir / benchmark_file
     data_path_arg = benchmark_file if bench_path.exists() else str(benchmark_file)
 
     cmd = [
         sys.executable,
         "-m",
         "experiments.Qwen3_VL_Instruct.evaluator",
-        "--data_root_path", str(BENCHMARK_DIR),
+        "--data_root_path", str(lang_benchmark_dir),
         "--data_path", data_path_arg,
         "--output_root", str(RESULTS_DIR),
         "--model_id", model_id,
@@ -174,6 +175,7 @@ def run_one(
         "--question_type", qtype,
         "--mode", mode,
         "--template_key", template_key,
+        "--lang", lang,
     ]
 
     if max_items > 0:
@@ -181,8 +183,6 @@ def run_one(
     if save_prompts:
         cmd.append("--save_prompts")
     
-    if cache_dir:
-        cmd += ["--cache_dir", str(cache_dir)]
     cmd += ["--count", str(count)]
 
     if question_ids:
@@ -296,18 +296,19 @@ def main():
 
 
 
-        print(f"\n{'#'*60}\n# Runner @ {ts}\n# Models: {model_ids}\n# Benchmarks: {len(benchmarks)}\n# mode={args.mode} template_key={template_key}\n{'#'*60}")
+        print(f"\n{'#'*60}\n# Runner @ {ts}\n# Models: {model_ids}\n# Benchmarks: {len(benchmarks)}\n# mode={args.mode} template_key={template_key} language={args.language}\n{'#'*60}")
         if args.question_ids or args.question_ids_file or args.question_id_regex:
             print(f"# Question_ID filter: ids={args.question_ids} file={args.question_ids_file} regex={args.question_id_regex}")
             print(f"{'#'*60}")
 
+        lang_benchmark_dir = BENCHMARK_DIR / args.language
         for mid, c_dir in zip(model_ids, cache_dir):
             print(f"model_save_dir: {c_dir}")
             for bf in benchmarks:
-                if (BENCHMARK_DIR / bf).exists():
+                if (lang_benchmark_dir / bf).exists():
                     pass
                 else:
-                    print(f"[WARN] benchmark file not found under benchmark/: {BENCHMARK_DIR / bf} (will try as-is)")
+                    print(f"[WARN] benchmark file not found under benchmark/{args.language}/: {lang_benchmark_dir / bf} (will try as-is)")
 
                 code, _ = run_one(
                     model_id=mid,
@@ -319,6 +320,7 @@ def main():
                     save_prompts=args.save_prompts,
                     mode=args.mode,
                     template_key=template_key,
+                    lang=args.language,
                     # pass through filters
                     question_ids=args.question_ids,
                     question_ids_file=args.question_ids_file,
