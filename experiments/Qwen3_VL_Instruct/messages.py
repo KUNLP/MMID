@@ -9,6 +9,52 @@ from ..Common_Utils.image_cache import url_to_cached_path
 LETTER_LIST = ["A", "B", "C", "D"]
 
 
+# =============================================================================
+# Language-specific section labels
+# =============================================================================
+_LABELS = {
+    "ko": {
+        "options":               "[보기]",
+        "outfit_info":           "[의상 정보]",
+        "utterance":             "[발화]",
+        "dialogue_segments":     "[대화 단락]",
+        "initial_dialogue":      "[초기 대화]",
+        "order_of_outfit":       "[대화 내 의상 정보 등장 순서]",
+        "order_of_outfit_image": "[대화 내 의상 이미지 등장 순서]",
+        "last_segment_image":    "[마지막 단락의 의상 이미지]",
+        "last_segment_info":     "[마지막 단락의 의상 정보]",
+        "task8_type1_intro":     "아래 [대화 단락]은 user와 assistant 간의 대화를 무작위로 섞은 단락 집합이다.\n",
+        "task8_type2_intro":     "아래 [초기 대화]는 user와 assistant 간의 첫 대화 내용이고, [대화 단락]은 [초기 대화] 이후 대화를 무작위로 섞은 단락 집합이다.\n",
+        "conversation_intro":    "아래 [대화]는 user와 assistant 간의 대화 내용이다.\n",
+        "conversation":          "[대화]",
+        "image_label":           "이미지",
+        "outfit_info_label":     "의상 정보",
+    },
+    "en": {
+        "options":               "[Options]",
+        "outfit_info":           "[Outfit Information]",
+        "utterance":             "[Utterance]",
+        "dialogue_segments":     "[Dialogue Segments]",
+        "initial_dialogue":      "[Initial Dialogue]",
+        "order_of_outfit":       "[Order of Outfit Information Appearance in Dialogue]",
+        "order_of_outfit_image": "[Order of Outfit Image Appearance in Dialogue]",
+        "last_segment_image":    "[Outfit Image of the Last Segment]",
+        "last_segment_info":     "[Outfit Information of the Last Segment]",
+        "task8_type1_intro":     "The following [Dialogue Segments] are a set of segments with the dialogue randomly shuffled.\n",
+        "task8_type2_intro":     "The following [Initial Dialogue] is the first conversation between user and assistant, and [Dialogue Segments] are a set of segments with the subsequent dialogue randomly shuffled.\n",
+        "conversation_intro":    "The following [Dialogue] is a conversation between user and assistant.\n",
+        "conversation":          "[Dialogue]",
+        "image_label":           "Image",
+        "outfit_info_label":     "Outfit Information",
+    },
+}
+
+
+def _L(lang: str, key: str) -> str:
+    """언어별 섹션 레이블 반환. 미지원 lang은 ko로 fallback."""
+    return _LABELS.get(lang, _LABELS["ko"])[key]
+
+
 # -----------------------------
 # Base message helpers
 # -----------------------------
@@ -87,9 +133,10 @@ def _append_conversation_lines(
     *,
     include_turn_image: bool,
     include_turn_tags_as_text: bool,
+    lang: str = "ko",
 ) -> None:
-    messages.append(_as_user_text("아래 [대화]는 user와 assistant 간의 대화 내용이다.\n"))
-    messages.append(_as_user_text("[대화]\n"))
+    messages.append(_as_user_text(_L(lang, "conversation_intro")))
+    messages.append(_as_user_text(_L(lang, "conversation") + "\n"))
 
     for t in conversation:
         role = t.get("role", "unknown")
@@ -112,7 +159,7 @@ def _append_conversation_lines(
                 tag_txt = str(tags)
             messages.append(_as_user_text(tag_txt + "\n"))
 
-        messages.append(_as_user_text(f"'{role}': '{content}'"))
+        messages.append(_as_user_text(f"'{role}': '{content}'\n"))
 
 
 # -----------------------------
@@ -124,6 +171,7 @@ def build_messages_task3_3_mcq_image(
     question_text: str,
     *,
     include_turn_image: bool = False,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
     _append_conversation_lines(
@@ -131,9 +179,10 @@ def build_messages_task3_3_mcq_image(
         conversation,
         include_turn_image=include_turn_image,
         include_turn_tags_as_text=False,
+        lang=lang,
     )
 
-    messages.append(_as_user_text("[보기]\n"))
+    messages.append(_as_user_text(_L(lang, "options") + "\n"))
     for i, letter in enumerate(LETTER_LIST):
         messages.append(_as_user_text(f"{letter}: "))
         if i < len(option_image_urls_abcd) and option_image_urls_abcd[i]:
@@ -151,6 +200,7 @@ def build_messages_task3_3_mcq_tags(
     question_text: str,
     *,
     include_turn_tags_as_text: bool = False,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
     _append_conversation_lines(
@@ -158,9 +208,10 @@ def build_messages_task3_3_mcq_tags(
         conversation,
         include_turn_image=False,
         include_turn_tags_as_text=include_turn_tags_as_text,
+        lang=lang,
     )
 
-    messages.append(_as_user_text("[보기]\n"))
+    messages.append(_as_user_text(_L(lang, "options") + "\n"))
     for i, letter in enumerate(LETTER_LIST):
         tag_txt = option_tags_abcd[i] if i < len(option_tags_abcd) else ""
         messages.append(_as_user_text(f"{letter}: {tag_txt}\n"))
@@ -177,12 +228,13 @@ def build_messages_task3_yn_image(
     option_image_url: str,
     statement_text_before_image: str,
     question_text_after_view: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
-    _append_conversation_lines(messages, conversation, include_turn_image=False, include_turn_tags_as_text=False)
+    _append_conversation_lines(messages, conversation, include_turn_image=False, include_turn_tags_as_text=False, lang=lang)
 
     items: List[Dict[str, Any]] = []
-    items.append(_text_item("[보기]\n" + (statement_text_before_image or "")))
+    items.append(_text_item(_L(lang, "options") + "\n" + (statement_text_before_image or "")))
     if option_image_url:
         items.append(_image_item(option_image_url))
     items.append(_text_item("\n\n" + (question_text_after_view or "")))
@@ -196,12 +248,13 @@ def build_messages_task3_yn_tags(
     option_tags_text: str,
     view_text: str,
     question_text_after_view: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
-    _append_conversation_lines(messages, conversation, include_turn_image=False, include_turn_tags_as_text=False)
+    _append_conversation_lines(messages, conversation, include_turn_image=False, include_turn_tags_as_text=False, lang=lang)
 
-    messages.append(_as_user_text("[보기]\n"))
-    messages.append(_as_user_text(view_text.format(tags=option_tags_text)))
+    messages.append(_as_user_text(_L(lang, "options") + "\n"))
+    messages.append(_as_user_text(view_text))
     messages.append(_as_user_text("\n\n" + question_text_after_view))
     return messages
 
@@ -213,12 +266,13 @@ def build_messages_task2_mcq_image(
     tag_text: str,
     option_image_urls_abcd: List[str],
     question_text: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
-    messages.append(_as_user_text("[의상 정보]\n"))
+    messages.append(_as_user_text(_L(lang, "outfit_info") + "\n"))
     messages.append(_as_user_text(tag_text.strip() + "\n\n"))
 
-    messages.append(_as_user_text("[보기]\n"))
+    messages.append(_as_user_text(_L(lang, "options") + "\n"))
     for i, letter in enumerate(LETTER_LIST):
         messages.append(_as_user_text(f"{letter}: "))
         if i < len(option_image_urls_abcd) and option_image_urls_abcd[i]:
@@ -230,18 +284,18 @@ def build_messages_task2_mcq_image(
     return messages
 
 
-# Task2 Yes/No
 def build_messages_task2_yn_image(
     tag_text: str,
     option_image_url: str,
     view_statement_before_image: str,
     question_text_after_view: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
-    messages.append(_as_user_text("[의상 정보]\n"))
+    messages.append(_as_user_text(_L(lang, "outfit_info") + "\n"))
     messages.append(_as_user_text(tag_text.strip() + "\n\n"))
 
-    messages.append(_as_user_text("[보기]\n"))
+    messages.append(_as_user_text(_L(lang, "options") + "\n"))
     messages.append(_as_user_text(view_statement_before_image or ""))
     if option_image_url:
         messages.append(_as_user_image(option_image_url))
@@ -257,11 +311,12 @@ def build_messages_task4_yn_image(
     conversation: List[Dict[str, Any]],
     view_text: str,
     question_text: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
-    _append_conversation_lines(messages, conversation, include_turn_image=True, include_turn_tags_as_text=False)
+    _append_conversation_lines(messages, conversation, include_turn_image=True, include_turn_tags_as_text=False, lang=lang)
 
-    messages.append(_as_user_text("[보기]\n"))
+    messages.append(_as_user_text(_L(lang, "options") + "\n"))
     messages.append(_as_user_text((view_text or "").strip()))
     messages.append(_as_user_text("\n\n" + (question_text or "")))
     return messages
@@ -271,11 +326,12 @@ def build_messages_task4_yn_tags(
     conversation: List[Dict[str, Any]],
     view_text: str,
     question_text: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
-    _append_conversation_lines(messages, conversation, include_turn_image=False, include_turn_tags_as_text=True)
+    _append_conversation_lines(messages, conversation, include_turn_image=False, include_turn_tags_as_text=True, lang=lang)
 
-    messages.append(_as_user_text("[보기]\n"))
+    messages.append(_as_user_text(_L(lang, "options") + "\n"))
     messages.append(_as_user_text((view_text or "").strip()))
     messages.append(_as_user_text("\n\n" + (question_text or "")))
     return messages
@@ -287,6 +343,7 @@ def build_messages_task4_yn_tags(
 def build_messages_task1_open_image(
     conversation: List[Dict[str, Any]],
     question_text: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
     _append_conversation_lines(
@@ -294,6 +351,7 @@ def build_messages_task1_open_image(
         conversation,
         include_turn_image=True,
         include_turn_tags_as_text=False,
+        lang=lang,
     )
     messages.append(_as_user_text("\n\n" + question_text))
     return messages
@@ -301,22 +359,17 @@ def build_messages_task1_open_image(
 
 # -----------------------------
 # Task5 : MCQ / YesNo (image/tags)
-# task5 format:
-#   [대화]...
-#   [보기]
-#   A: image/tag
-#   ...
-#   질문: ...정답:
 # -----------------------------
 def build_messages_task5_mcq_image(
     conversation: List[Dict[str, Any]],
     option_image_urls_abcd: List[str],
     question_text: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
-    _append_conversation_lines(messages, conversation, include_turn_image=True, include_turn_tags_as_text=False)
+    _append_conversation_lines(messages, conversation, include_turn_image=True, include_turn_tags_as_text=False, lang=lang)
 
-    messages.append(_as_user_text("[보기]\n"))
+    messages.append(_as_user_text(_L(lang, "options") + "\n"))
     for i, letter in enumerate(LETTER_LIST):
         messages.append(_as_user_text(f"{letter}: "))
         if i < len(option_image_urls_abcd) and option_image_urls_abcd[i]:
@@ -332,11 +385,12 @@ def build_messages_task5_mcq_tags(
     conversation: List[Dict[str, Any]],
     option_tags_abcd: List[str],
     question_text: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
-    _append_conversation_lines(messages, conversation, include_turn_image=False, include_turn_tags_as_text=True)
+    _append_conversation_lines(messages, conversation, include_turn_image=False, include_turn_tags_as_text=True, lang=lang)
 
-    messages.append(_as_user_text("[보기]\n"))
+    messages.append(_as_user_text(_L(lang, "options") + "\n"))
     for i, letter in enumerate(LETTER_LIST):
         tag_txt = option_tags_abcd[i] if i < len(option_tags_abcd) else ""
         messages.append(_as_user_text(f"{letter}: {tag_txt}\n"))
@@ -345,18 +399,17 @@ def build_messages_task5_mcq_tags(
     return messages
 
 
-# Task5 Yes/No: one-content
-# Format: [보기]\n + statement_text + 이미지/태그 + 질문
 def build_messages_task5_yn_image(
     conversation: List[Dict[str, Any]],
     option_image_url: str,
     statement_text_before_image: str,
     question_text_after_view: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
-    _append_conversation_lines(messages, conversation, include_turn_image=True, include_turn_tags_as_text=False)
+    _append_conversation_lines(messages, conversation, include_turn_image=True, include_turn_tags_as_text=False, lang=lang)
 
-    messages.append(_as_user_text("[보기]\n"))
+    messages.append(_as_user_text(_L(lang, "options") + "\n"))
     messages.append(_as_user_text((statement_text_before_image or "") + "\n"))
     if option_image_url:
         messages.append(_as_user_image(option_image_url))
@@ -369,11 +422,12 @@ def build_messages_task5_yn_tags(
     option_tags_text: str,
     statement_text_before_tags: str,
     question_text_after_view: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
-    _append_conversation_lines(messages, conversation, include_turn_image=False, include_turn_tags_as_text=True)
+    _append_conversation_lines(messages, conversation, include_turn_image=False, include_turn_tags_as_text=True, lang=lang)
 
-    messages.append(_as_user_text("[보기]\n"))
+    messages.append(_as_user_text(_L(lang, "options") + "\n"))
     messages.append(_as_user_text((statement_text_before_tags or "") + "\n"))
     messages.append(_as_user_text(option_tags_text or ""))
     messages.append(_as_user_text("\n\n" + (question_text_after_view or "")))
@@ -382,30 +436,22 @@ def build_messages_task5_yn_tags(
 
 # -----------------------------
 # Task7 : MCQ / YesNo (image/tags)
-# task7 format:
-#   [대화]...
-#   [발화]
-#   "발화 내용"
-#   [보기]
-#   A: image/tag (MCQ) 또는 statement + image/tag (YN)
-#   ...
-#   질문: ...정답:
 # -----------------------------
 def build_messages_task7_mcq_image(
     conversation: List[Dict[str, Any]],
     utterance_text: str,
     option_image_urls_abcd: List[str],
     question_text: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
-    _append_conversation_lines(messages, conversation, include_turn_image=True, include_turn_tags_as_text=False)
+    _append_conversation_lines(messages, conversation, include_turn_image=True, include_turn_tags_as_text=False, lang=lang)
 
-    # [발화] 섹션
     if utterance_text:
-        messages.append(_as_user_text("[발화]\n"))
+        messages.append(_as_user_text(_L(lang, "utterance") + "\n"))
         messages.append(_as_user_text(utterance_text + "\n\n"))
 
-    messages.append(_as_user_text("[보기]\n"))
+    messages.append(_as_user_text(_L(lang, "options") + "\n"))
     for i, letter in enumerate(LETTER_LIST):
         messages.append(_as_user_text(f"{letter}: "))
         if i < len(option_image_urls_abcd) and option_image_urls_abcd[i]:
@@ -422,16 +468,16 @@ def build_messages_task7_mcq_tags(
     utterance_text: str,
     option_tags_abcd: List[str],
     question_text: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
-    _append_conversation_lines(messages, conversation, include_turn_image=False, include_turn_tags_as_text=True)
+    _append_conversation_lines(messages, conversation, include_turn_image=False, include_turn_tags_as_text=True, lang=lang)
 
-    # [발화] 섹션
     if utterance_text:
-        messages.append(_as_user_text("[발화]\n"))
+        messages.append(_as_user_text(_L(lang, "utterance") + "\n"))
         messages.append(_as_user_text(utterance_text + "\n\n"))
 
-    messages.append(_as_user_text("[보기]\n"))
+    messages.append(_as_user_text(_L(lang, "options") + "\n"))
     for i, letter in enumerate(LETTER_LIST):
         tag_txt = option_tags_abcd[i] if i < len(option_tags_abcd) else ""
         messages.append(_as_user_text(f"{letter}: {tag_txt}\n"))
@@ -440,24 +486,23 @@ def build_messages_task7_mcq_tags(
     return messages
 
 
-# Task7 Yes/No
-# Format: [발화]\n + 발화내용 + [보기]\n + statement_text + 이미지/태그 + 질문
 def build_messages_task7_yn_image(
     conversation: List[Dict[str, Any]],
     utterance_text: str,
     option_image_url: str,
     statement_text_before_image: str,
     question_text_after_view: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
-    _append_conversation_lines(messages, conversation, include_turn_image=True, include_turn_tags_as_text=False)
+    _append_conversation_lines(messages, conversation, include_turn_image=True, include_turn_tags_as_text=False, lang=lang)
 
     if utterance_text:
-        messages.append(_as_user_text("[발화]\n"))
+        messages.append(_as_user_text(_L(lang, "utterance") + "\n"))
         messages.append(_as_user_text(utterance_text + "\n\n"))
 
     items: List[Dict[str, Any]] = []
-    items.append(_text_item("[보기]\n"))
+    items.append(_text_item(_L(lang, "options") + "\n"))
     items.append(_text_item((statement_text_before_image or "") + "\n"))
     if option_image_url:
         items.append(_image_item(option_image_url))
@@ -473,15 +518,16 @@ def build_messages_task7_yn_tags(
     option_tags_text: str,
     statement_text_before_tags: str,
     question_text_after_view: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
-    _append_conversation_lines(messages, conversation, include_turn_image=False, include_turn_tags_as_text=True)
+    _append_conversation_lines(messages, conversation, include_turn_image=False, include_turn_tags_as_text=True, lang=lang)
 
     if utterance_text:
-        messages.append(_as_user_text("[발화]\n"))
+        messages.append(_as_user_text(_L(lang, "utterance") + "\n"))
         messages.append(_as_user_text(utterance_text + "\n\n"))
 
-    messages.append(_as_user_text("[보기]\n"))
+    messages.append(_as_user_text(_L(lang, "options") + "\n"))
     messages.append(_as_user_text((statement_text_before_tags or "") + "\n"))
     messages.append(_as_user_text(option_tags_text or ""))
     messages.append(_as_user_text("\n\n" + (question_text_after_view or "")))
@@ -495,11 +541,12 @@ def build_messages_task6_type1_mcq_image(
     conversation: List[Dict[str, Any]],
     option_texts_abcd: List[str],
     question_text: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
-    _append_conversation_lines(messages, conversation, include_turn_image=True, include_turn_tags_as_text=False)
+    _append_conversation_lines(messages, conversation, include_turn_image=True, include_turn_tags_as_text=False, lang=lang)
 
-    messages.append(_as_user_text("[보기]\n"))
+    messages.append(_as_user_text(_L(lang, "options") + "\n"))
     for i, letter in enumerate(LETTER_LIST):
         opt_txt = option_texts_abcd[i] if i < len(option_texts_abcd) else ""
         messages.append(_as_user_text(f"{letter}: "))
@@ -513,11 +560,12 @@ def build_messages_task6_type1_mcq_tags(
     conversation: List[Dict[str, Any]],
     option_texts_abcd: List[str],
     question_text: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
-    _append_conversation_lines(messages, conversation, include_turn_image=False, include_turn_tags_as_text=True)
+    _append_conversation_lines(messages, conversation, include_turn_image=False, include_turn_tags_as_text=True, lang=lang)
 
-    messages.append(_as_user_text("[보기]\n"))
+    messages.append(_as_user_text(_L(lang, "options") + "\n"))
     for i, letter in enumerate(LETTER_LIST):
         opt_txt = option_texts_abcd[i] if i < len(option_texts_abcd) else ""
         messages.append(_as_user_text(f"{letter}: {opt_txt}\n"))
@@ -526,16 +574,16 @@ def build_messages_task6_type1_mcq_tags(
     return messages
 
 
-# Task6 Yes/No
 def build_messages_task6_type1_yn_image(
     conversation: List[Dict[str, Any]],
     view_text: str,
     question_text: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
-    _append_conversation_lines(messages, conversation, include_turn_image=True, include_turn_tags_as_text=False)
+    _append_conversation_lines(messages, conversation, include_turn_image=True, include_turn_tags_as_text=False, lang=lang)
 
-    combined = "[보기]\n" + (view_text or "").strip() + "\n\n" + (question_text or "")
+    combined = _L(lang, "options") + "\n" + (view_text or "").strip() + "\n\n" + (question_text or "")
     messages.append(_as_user_text(combined))
     return messages
 
@@ -544,11 +592,12 @@ def build_messages_task6_type1_yn_tags(
     conversation: List[Dict[str, Any]],
     view_text: str,
     question_text: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
-    _append_conversation_lines(messages, conversation, include_turn_image=False, include_turn_tags_as_text=True)
+    _append_conversation_lines(messages, conversation, include_turn_image=False, include_turn_tags_as_text=True, lang=lang)
 
-    messages.append(_as_user_text("[보기]\n"))
+    messages.append(_as_user_text(_L(lang, "options") + "\n"))
     messages.append(_as_user_text((view_text or "").strip()))
     messages.append(_as_user_text("\n\n" + (question_text or "")))
     return messages
@@ -559,15 +608,16 @@ def build_messages_task6_type2_mcq_image(
     conversation: List[Dict[str, Any]],
     option_texts_abcd: List[str],
     question_text: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
-    messages.append(_as_user_text("[의상 정보]\n"))
+    messages.append(_as_user_text(_L(lang, "outfit_info") + "\n"))
     messages.append(_as_user_text(tag_text.strip() + "\n\n"))
 
     if conversation:
-        _append_conversation_lines(messages, conversation, include_turn_image=True, include_turn_tags_as_text=False)
+        _append_conversation_lines(messages, conversation, include_turn_image=True, include_turn_tags_as_text=False, lang=lang)
 
-    messages.append(_as_user_text("[보기]\n"))
+    messages.append(_as_user_text(_L(lang, "options") + "\n"))
     for i, letter in enumerate(LETTER_LIST):
         opt_txt = option_texts_abcd[i] if i < len(option_texts_abcd) else ""
         messages.append(_as_user_text(f"{letter}: "))
@@ -582,15 +632,16 @@ def build_messages_task6_type2_mcq_tags(
     conversation: List[Dict[str, Any]],
     option_texts_abcd: List[str],
     question_text: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
-    messages.append(_as_user_text("[의상 정보]\n"))
+    messages.append(_as_user_text(_L(lang, "outfit_info") + "\n"))
     messages.append(_as_user_text(tag_text.strip() + "\n\n"))
 
     if conversation:
-        _append_conversation_lines(messages, conversation, include_turn_image=False, include_turn_tags_as_text=True)
+        _append_conversation_lines(messages, conversation, include_turn_image=False, include_turn_tags_as_text=True, lang=lang)
 
-    messages.append(_as_user_text("[보기]\n"))
+    messages.append(_as_user_text(_L(lang, "options") + "\n"))
     for i, letter in enumerate(LETTER_LIST):
         opt_txt = option_texts_abcd[i] if i < len(option_texts_abcd) else ""
         messages.append(_as_user_text(f"{letter}: {opt_txt}\n"))
@@ -599,21 +650,21 @@ def build_messages_task6_type2_mcq_tags(
     return messages
 
 
-# Task6 type2 Yes/No
 def build_messages_task6_type2_yn_image(
     tag_text: str,
     conversation: List[Dict[str, Any]],
     view_text: str,
     question_text: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
-    messages.append(_as_user_text("[의상 정보]\n"))
+    messages.append(_as_user_text(_L(lang, "outfit_info") + "\n"))
     messages.append(_as_user_text(tag_text.strip() + "\n\n"))
 
     if conversation:
-        _append_conversation_lines(messages, conversation, include_turn_image=True, include_turn_tags_as_text=False)
+        _append_conversation_lines(messages, conversation, include_turn_image=True, include_turn_tags_as_text=False, lang=lang)
 
-    combined = "[보기]\n" + (view_text or "").strip() + "\n\n" + (question_text or "")
+    combined = _L(lang, "options") + "\n" + (view_text or "").strip() + "\n\n" + (question_text or "")
     messages.append(_as_user_text(combined))
     return messages
 
@@ -623,15 +674,16 @@ def build_messages_task6_type2_yn_tags(
     conversation: List[Dict[str, Any]],
     view_text: str,
     question_text: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
-    messages.append(_as_user_text("[의상 정보]\n"))
+    messages.append(_as_user_text(_L(lang, "outfit_info") + "\n"))
     messages.append(_as_user_text(tag_text.strip() + "\n\n"))
 
     if conversation:
-        _append_conversation_lines(messages, conversation, include_turn_image=False, include_turn_tags_as_text=True)
+        _append_conversation_lines(messages, conversation, include_turn_image=False, include_turn_tags_as_text=True, lang=lang)
 
-    messages.append(_as_user_text("[보기]\n"))
+    messages.append(_as_user_text(_L(lang, "options") + "\n"))
     messages.append(_as_user_text((view_text or "").strip()))
     messages.append(_as_user_text("\n\n" + (question_text or "")))
     return messages
@@ -647,27 +699,28 @@ def build_messages_task8_type1_mcq_image(
     images: List[str],
     option_texts_abcd: List[str],
     question_text: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
 
-    messages.append(_as_user_text("아래 [대화 단락]은 user와 assistant 간의 대화를 무작위로 섞은 단락 집합이다.\n"))
-    question_text = question_text.replace("[대화 단락]은 user와 assistant 간의 대화를 무작위로 섞은 단락 집합이다.", "")
-    
-    messages.append(_as_user_text("[대화 단락]\n"))
+    messages.append(_as_user_text(_L(lang, "task8_type1_intro")))
+    if lang == "ko":
+        question_text = question_text.replace("[Dialogue Segments] is a set of segments with the dialogue randomly shuffled.", "")
+
+    messages.append(_as_user_text(_L(lang, "dialogue_segments") + "\n"))
 
     for label, turns in [("a", conversation_a), ("b", conversation_b), ("c", conversation_c)]:
         messages.append(_as_user_text(f"({label})\n"))
         _append_turns_as_lines(messages, turns, include_turn_image_url_as_text=False)
         messages.append(_as_user_text("\n"))
 
-    messages.append(_as_user_text("[대화 내 의상 이미지 등장 순서]\n"))
+    messages.append(_as_user_text(_L(lang, "order_of_outfit_image") + "\n"))
     for idx, img_url in enumerate(images):
         if img_url:
-            messages.append(_as_user_text(f"이미지 {idx + 1}: "))
             messages.append(_as_user_image(img_url))
         messages.append(_as_user_text("\n"))
 
-    messages.append(_as_user_text("\n[보기]\n"))
+    messages.append(_as_user_text("\n" + _L(lang, "options") + "\n"))
     for i, letter in enumerate(LETTER_LIST):
         opt_txt = option_texts_abcd[i] if i < len(option_texts_abcd) else ""
         messages.append(_as_user_text(f"{letter}: {opt_txt}\n"))
@@ -683,24 +736,26 @@ def build_messages_task8_type1_mcq_tags(
     image_tags: List[str],
     option_texts_abcd: List[str],
     question_text: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
 
-    messages.append(_as_user_text("아래 [대화 단락]은 user와 assistant 간의 대화를 무작위로 섞은 단락 집합이다.\n"))
-    question_text = question_text.replace("[대화 단락]은 user와 assistant 간의 대화를 무작위로 섞은 단락 집합이다.", "")
-    
-    messages.append(_as_user_text("[대화 단락]\n"))
+    messages.append(_as_user_text(_L(lang, "task8_type1_intro")))
+    if lang == "ko":
+        question_text = question_text.replace("[대화 단락]은 user와 assistant 간의 대화를 무작위로 섞은 단락 집합이다.", "")
+
+    messages.append(_as_user_text(_L(lang, "dialogue_segments") + "\n"))
 
     for label, turns in [("a", conversation_a), ("b", conversation_b), ("c", conversation_c)]:
         messages.append(_as_user_text(f"({label})\n"))
         _append_turns_as_lines(messages, turns, include_turn_image_url_as_text=False)
         messages.append(_as_user_text("\n"))
 
-    messages.append(_as_user_text("[대화 내 의상 정보 등장 순서]\n"))
+    messages.append(_as_user_text(_L(lang, "order_of_outfit") + "\n"))
     for idx, t in enumerate(image_tags):
-        messages.append(_as_user_text((f"의상 정보 {idx + 1}: ") + (str(t) if t else "") + "\n"))
+        messages.append(_as_user_text(f"{_L(lang, 'outfit_info_label')} {idx + 1}: " + (str(t) if t else "") + "\n"))
 
-    messages.append(_as_user_text("\n[보기]\n"))
+    messages.append(_as_user_text("\n" + _L(lang, "options") + "\n"))
     for i, letter in enumerate(LETTER_LIST):
         opt_txt = option_texts_abcd[i] if i < len(option_texts_abcd) else ""
         messages.append(_as_user_text(f"{letter}: {opt_txt}\n"))
@@ -717,26 +772,28 @@ def build_messages_task8_type2_mcq_image(
     last_image_url: str,
     option_texts_abcd: List[str],
     question_text: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
 
-    messages.append(_as_user_text("아래 [초기 대화]는 user와 assistant 간의 첫 대화 내용이고, [대화 단락]은 [초기 대화] 이후 대화를 무작위로 섞은 단락 집합이다.\n"))
-    question_text = question_text.replace("[대화 단락]은 [초기 대화] 이후 대화를 무작위로 섞은 단락 집합이다.", "").strip()
+    messages.append(_as_user_text(_L(lang, "task8_type2_intro")))
+    if lang == "ko":
+        question_text = question_text.replace("[대화 단락]은 [초기 대화] 이후 대화를 무작위로 섞은 단락 집합이다.", "").strip()
 
-    messages.append(_as_user_text("[초기 대화]\n"))
+    messages.append(_as_user_text(_L(lang, "initial_dialogue") + "\n"))
     _append_turns_as_lines(messages, conversation_init, include_turn_image_url_as_text=False)
 
-    messages.append(_as_user_text("\n[대화 단락]\n"))
+    messages.append(_as_user_text("\n" + _L(lang, "dialogue_segments") + "\n"))
     for label, turns in [("a", conversation_a), ("b", conversation_b), ("c", conversation_c)]:
         messages.append(_as_user_text(f"({label})\n"))
         _append_turns_as_lines(messages, turns, include_turn_image_url_as_text=False)
         messages.append(_as_user_text("\n"))
 
-    messages.append(_as_user_text("[마지막 단락의 의상 이미지]\n"))
+    messages.append(_as_user_text(_L(lang, "last_segment_image") + "\n"))
     if last_image_url:
         messages.append(_as_user_image(last_image_url))
 
-    messages.append(_as_user_text("\n[보기]\n"))
+    messages.append(_as_user_text("\n" + _L(lang, "options") + "\n"))
     for i, letter in enumerate(LETTER_LIST):
         opt_txt = option_texts_abcd[i] if i < len(option_texts_abcd) else ""
         messages.append(_as_user_text(f"{letter}: {opt_txt}\n"))
@@ -753,26 +810,28 @@ def build_messages_task8_type2_mcq_tags(
     last_image_tags: str,
     option_texts_abcd: List[str],
     question_text: str,
+    lang: str = "ko",
 ) -> List[Dict[str, Any]]:
     messages: List[Dict[str, Any]] = []
 
-    messages.append(_as_user_text("아래 [초기 대화]는 user와 assistant 간의 첫 대화 내용이고, [대화 단락]은 [초기 대화] 이후 대화를 무작위로 섞은 단락 집합이다.\n"))
-    question_text = question_text.replace("[대화 단락]은 [초기 대화] 이후 대화를 무작위로 섞은 단락 집합이다.", "").strip()
+    messages.append(_as_user_text(_L(lang, "task8_type2_intro")))
+    if lang == "ko":
+        question_text = question_text.replace("[대화 단락]은 [초기 대화] 이후 대화를 무작위로 섞은 단락 집합이다.", "").strip()
 
-    messages.append(_as_user_text("[초기 대화]\n"))
+    messages.append(_as_user_text(_L(lang, "initial_dialogue") + "\n"))
     _append_turns_as_lines(messages, conversation_init, include_turn_image_url_as_text=False)
 
-    messages.append(_as_user_text("\n[대화 단락]\n"))
+    messages.append(_as_user_text("\n" + _L(lang, "dialogue_segments") + "\n"))
     for label, turns in [("a", conversation_a), ("b", conversation_b), ("c", conversation_c)]:
         messages.append(_as_user_text(f"({label})\n"))
         _append_turns_as_lines(messages, turns, include_turn_image_url_as_text=False)
         messages.append(_as_user_text("\n"))
 
-    messages.append(_as_user_text("[마지막 단락의 의상 정보]\n"))
+    messages.append(_as_user_text(_L(lang, "last_segment_info") + "\n"))
     if last_image_tags:
         messages.append(_as_user_text(str(last_image_tags) + "\n"))
 
-    messages.append(_as_user_text("\n[보기]\n"))
+    messages.append(_as_user_text("\n" + _L(lang, "options") + "\n"))
     for i, letter in enumerate(LETTER_LIST):
         opt_txt = option_texts_abcd[i] if i < len(option_texts_abcd) else ""
         messages.append(_as_user_text(f"{letter}: {opt_txt}\n"))
