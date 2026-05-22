@@ -11,8 +11,6 @@ from .messages import (
     build_messages_task2_mcq_image,
     build_messages_task2_yn_image,
 
-    build_messages_task3_3_mcq_image,
-    build_messages_task3_3_mcq_tags,
     build_messages_task3_yn_image,
     build_messages_task3_yn_tags,
 
@@ -44,6 +42,9 @@ from .messages import (
     build_messages_task8_type1_mcq_tags,
     build_messages_task8_type2_mcq_image,
     build_messages_task8_type2_mcq_tags,
+
+    _as_user_text,
+    _as_user_image,
 )
 
 LETTER_LIST = ["A", "B", "C", "D"]
@@ -139,10 +140,11 @@ def render_prompt(
 
 
 def extract_question_part(full_prompt: str) -> str:
-    idx = full_prompt.find("질문:")
-    if idx < 0:
-        return full_prompt.strip()
-    return full_prompt[idx:].strip()
+    for marker in ("Question:", "질문:"):
+        idx = full_prompt.find(marker)
+        if idx >= 0:
+            return full_prompt[idx:].strip()
+    return full_prompt.strip()
 
 
 def _normalize_text_with_user_grammar(s: str, user_name: str) -> str:
@@ -154,11 +156,6 @@ def _normalize_text_with_user_grammar(s: str, user_name: str) -> str:
 
 
 def _infer_subtype(item: Dict[str, Any]) -> int:
-    """
-    task subtype detection:
-    - supports keys like: subtype / Subtype / sub_type / Task_Subtype / Sub_Type
-    - default: 1
-    """
     for k in ("subtype", "Subtype", "sub_type", "Task_Subtype", "Sub_Type", "task_subtype"):
         if k in item and item.get(k) is not None:
             try:
@@ -199,11 +196,12 @@ def build_messages_dispatch(
     image_url_list: List[str],
     tag_list: List[str],
     text_list: List[str],
+    lang: str = "ko",
 ) -> Tuple[List[Dict[str, Any]], str]:
-    
+
     question_type = _normalize_question_type(question_type)
     mode = _normalize_mode(mode)
-    
+
     prompt_tpl = item.get("Prompt_Template", {}) or {}
     if template_key not in prompt_tpl:
         raise KeyError(f"Prompt_Template missing key: {template_key}")
@@ -223,134 +221,191 @@ def build_messages_dispatch(
     )
     question_text = extract_question_part(full_prompt)
 
-    # ---- Per Task ----
+    # Language-specific split markers
+    _lbl_options   = "[Options]"   if lang == "en" else "[보기]"
+    _lbl_utterance = "[Utterance]" if lang == "en" else "[발화]"
+    _lbl_question  = "Question:"   if lang == "en" else "질문:"
+
+    # ---- Task 1 ----
     if task_id == 1:
-        msgs = build_messages_task1_open_image(conversation=conversation, question_text=question_text)
+        msgs = build_messages_task1_open_image(
+            conversation=conversation,
+            question_text=question_text,
+            lang=lang,
+        )
         return msgs, "image"
 
+    # ---- Task 2 ----
+    def _find_index_by_output(options, output_value) -> int:
+        if not options or output_value is None:
+            return -1
+        for i, opt in enumerate(options):
+            opt_id = opt.get("Option_id") or opt.get("option_id") or opt.get("Option_ID") or opt.get("Option_Id")
+            if str(opt_id) == str(output_value):
+                return i
+        return -1
+
+    def _tag_from_tag_list_by_output(options, tag_list, output_value) -> str:
+        idx = _find_index_by_output(options, output_value)
+        return tag_list[idx] if 0 <= idx < len(tag_list) else ""
+
     if task_id == 2:
+        options = item.get("Options") or item.get("options") or []
+        output_value = item.get("gt_output") or item.get("Output") or item.get("output")
+        tag_text = _tag_from_tag_list_by_output(options, tag_list, output_value)
+
         if question_type == "multiple_choice":
-            output_idx = item.get("Output", 0)
-            tag_text = tag_list[output_idx] if tag_list else ""
             msgs = build_messages_task2_mcq_image(
                 tag_text=tag_text,
                 option_image_urls_abcd=image_url_list,
                 question_text=question_text,
+                lang=lang,
             )
             return msgs, "image"
+
         if question_type == "yes_or_no":
             tag_text = tag_list[0] if tag_list else ""
             marker = image_url_list[0] if image_url_list else ""
-
-            view_before = "[의상 정보]에 해당하는 가장 적합한 의상 이미지는 다음과 같다. "
+            parts = full_prompt.split(_lbl_options, 1)
+            view_stmt = parts[1] if len(parts) > 1 else ""
+            if marker and marker in view_stmt:
+                view_before = view_stmt.split(marker)[0]
+            else:
+                view_before = (
+                    "The most suitable outfit image for [Outfit Information] is as follows. "
+                    if lang == "en" else
+                    "[의상 정보]에 해당하는 가장 적합한 의상 이미지는 다음과 같다. "
+                )
             msgs = build_messages_task2_yn_image(
                 tag_text=tag_text,
                 option_image_url=marker,
                 view_statement_before_image=view_before,
                 question_text_after_view=question_text,
+                lang=lang,
             )
             return msgs, "image"
 
+    # ---- Task 3 ----
     if task_id == 3:
         if question_type == "multiple_choice":
-            if mode == "image":
-                msgs = build_messages_task3_3_mcq_image(
-                    conversation=conversation,
-                    option_image_urls_abcd=image_url_list,
-                    question_text=question_text,
-                    include_turn_image=False,
-                )
-                return msgs, "image"
-            else:
-                msgs = build_messages_task3_3_mcq_tags(
-                    conversation=conversation,
-                    option_tags_abcd=tag_list,
-                    question_text=question_text,
-                    include_turn_tags_as_text=False,
-                )
-                return msgs, "tags"
-
-        if question_type == "yes_or_no":
-            if mode == "image":
-                marker = image_url_list[0] if image_url_list else ""
-                before = full_prompt.split("[보기]")[1]
-                if marker and marker in before:
-                    statement_before_image = before.split(marker)[0]
-                else:
-                    statement_before_image = f"{user_name}{grammer_2(user_name)} 선호하는 의상을 다음과 같다. "
-                msgs = build_messages_task3_yn_image(
-                    conversation=conversation,
-                    option_image_url=marker,
-                    statement_text_before_image=statement_before_image,
-                    question_text_after_view=question_text,
-                )
-                return msgs, "image"
-            else:
-                after_view = full_prompt.split("[보기]")[1]
-                view_part = after_view.split("질문:")[0].strip("\n")
-
-                img_marker = image_url_list[0] if image_url_list else ""
-                tag_marker = tag_list[0] if tag_list else ""
-                if img_marker and img_marker in view_part:
-                    view_part = view_part.replace(img_marker, tag_marker)
-
-                msgs = build_messages_task3_yn_tags(
-                    conversation=conversation,
-                    option_tags_text=tag_marker,
-                    view_text=view_part,
-                    question_text_after_view=question_text,
-                )
-                return msgs, "tags"
-
-    if task_id == 4:
-        conversation = item.get("Conversation", []) or []
-        user_name = str(item.get("user", "user"))
-        conv_mode = mode
-
-        if question_type == "multiple_choice":
-            from .messages import _as_user_text, _as_user_image 
-
+            conv_mode = mode
             msgs: List[Dict[str, Any]] = []
-            msgs.append(_as_user_text("아래 [대화]는 user와 assistant 간의 대화 내용이다.\n"))
-            msgs.append(_as_user_text("[대화]\n"))
+            if lang == "en":
+                msgs.append(_as_user_text("The following [Dialogue] is a conversation between user and assistant.\n"))
+                msgs.append(_as_user_text("[Dialogue]\n"))
+            else:
+                msgs.append(_as_user_text("아래 [대화]는 user와 assistant 간의 대화 내용이다.\n"))
+                msgs.append(_as_user_text("[대화]\n"))
 
             for t in conversation:
                 role = t.get("role", "unknown")
                 content = str(t.get("content", ""))
-
                 image_info = t.get("image_info") or {}
                 img_url = None
                 tags = None
                 if isinstance(image_info, dict):
                     img_url = image_info.get("Url") or image_info.get("url")
                     tags = image_info.get("Tags") or image_info.get("tags")
-
                 if conv_mode == "image" and img_url:
                     msgs.append(_as_user_image(str(img_url)))
                 elif conv_mode == "tags" and tags:
                     tag_txt = ", ".join(map(str, tags)) if isinstance(tags, list) else str(tags)
                     msgs.append(_as_user_text(tag_txt + "\n"))
-
                 msgs.append(_as_user_text(f"'{role}': '{content}'\n"))
 
-            msgs.append(_as_user_text("[보기]\n"))
+            msgs.append(_as_user_text(_lbl_options + "\n"))
             for i, letter in enumerate(LETTER_LIST):
                 opt_txt = text_list[i] if i < len(text_list) else ""
                 opt_txt = _normalize_text_with_user_grammar(opt_txt, user_name)
                 msgs.append(_as_user_text(f"{letter}: {opt_txt}\n"))
+            msgs.append(_as_user_text("\n" + question_text))
+            return msgs, ("image" if conv_mode == "image" else "tags")
 
+        if question_type == "yes_or_no":
+            if mode == "image":
+                parts = full_prompt.split(_lbl_options, 1)
+                after_view = parts[1] if len(parts) > 1 else ""
+                marker = image_url_list[0] if image_url_list else ""
+                if marker and marker in after_view:
+                    statement_before_image = after_view.split(marker)[0]
+                else:
+                    statement_before_image = (
+                        f"The outfit that {user_name} prefers is as follows. "
+                        if lang == "en" else
+                        f"{user_name}{grammer_2(user_name)} 선호하는 의상을 다음과 같다. "
+                    )
+                msgs = build_messages_task3_yn_image(
+                    conversation=conversation,
+                    option_image_url=marker,
+                    statement_text_before_image=statement_before_image,
+                    question_text_after_view=question_text,
+                    lang=lang,
+                )
+                return msgs, "image"
+            else:
+                parts = full_prompt.split(_lbl_options, 1)
+                after_view = parts[1] if len(parts) > 1 else ""
+                view_part = after_view.split(_lbl_question)[0].strip("\n")
+                img_marker = image_url_list[0] if image_url_list else ""
+                tag_marker = tag_list[0] if tag_list else ""
+                if img_marker and img_marker in view_part:
+                    view_part = view_part.replace(img_marker, tag_marker)
+                elif tag_marker:
+                    view_part = (view_part + "\n" if view_part else "") + tag_marker
+                msgs = build_messages_task3_yn_tags(
+                    conversation=conversation,
+                    option_tags_text=tag_marker,
+                    view_text=view_part,
+                    question_text_after_view=question_text,
+                    lang=lang,
+                )
+                return msgs, "tags"
+
+    # ---- Task 4 ----
+    if task_id == 4:
+        if question_type == "multiple_choice":
+            conv_mode = mode
+            msgs = []
+            if lang == "en":
+                msgs.append(_as_user_text("The following [Dialogue] is a conversation between user and assistant.\n"))
+                msgs.append(_as_user_text("[Dialogue]\n"))
+            else:
+                msgs.append(_as_user_text("아래 [대화]는 user와 assistant 간의 대화 내용이다.\n"))
+                msgs.append(_as_user_text("[대화]\n"))
+
+            for t in conversation:
+                role = t.get("role", "unknown")
+                content = str(t.get("content", ""))
+                image_info = t.get("image_info") or {}
+                img_url = None
+                tags = None
+                if isinstance(image_info, dict):
+                    img_url = image_info.get("Url") or image_info.get("url")
+                    tags = image_info.get("Tags") or image_info.get("tags")
+                if conv_mode == "image" and img_url:
+                    msgs.append(_as_user_image(str(img_url)))
+                elif conv_mode == "tags" and tags:
+                    tag_txt = ", ".join(map(str, tags)) if isinstance(tags, list) else str(tags)
+                    msgs.append(_as_user_text(tag_txt + "\n"))
+                msgs.append(_as_user_text(f"'{role}': '{content}'\n"))
+
+            msgs.append(_as_user_text(_lbl_options + "\n"))
+            for i, letter in enumerate(LETTER_LIST):
+                opt_txt = text_list[i] if i < len(text_list) else ""
+                opt_txt = _normalize_text_with_user_grammar(opt_txt, user_name)
+                msgs.append(_as_user_text(f"{letter}: {opt_txt}\n"))
             msgs.append(_as_user_text("\n" + question_text))
             return msgs, ("image" if conv_mode == "image" else "tags")
 
         if question_type == "yes_or_no":
             view_text = text_list[0] if len(text_list) > 0 else ""
             view_text = _normalize_text_with_user_grammar(view_text, user_name)
-
-            if conv_mode == "image":
+            if mode == "image":
                 msgs = build_messages_task4_yn_image(
                     conversation=conversation,
                     view_text=view_text,
                     question_text=question_text,
+                    lang=lang,
                 )
                 return msgs, "image"
             else:
@@ -358,12 +413,13 @@ def build_messages_dispatch(
                     conversation=conversation,
                     view_text=view_text,
                     question_text=question_text,
+                    lang=lang,
                 )
                 return msgs, "tags"
 
-        raise ValueError(f"Task3 unsupported question_type: {question_type}")
+        raise ValueError(f"Task4 unsupported question_type: {question_type}")
 
-
+    # ---- Task 5 ----
     if task_id == 5:
         if question_type == "multiple_choice":
             if mode == "image":
@@ -371,6 +427,7 @@ def build_messages_dispatch(
                     conversation=conversation,
                     option_image_urls_abcd=image_url_list,
                     question_text=question_text,
+                    lang=lang,
                 )
                 return msgs, "image"
             else:
@@ -378,24 +435,31 @@ def build_messages_dispatch(
                     conversation=conversation,
                     option_tags_abcd=tag_list,
                     question_text=question_text,
+                    lang=lang,
                 )
                 return msgs, "tags"
 
         if question_type == "yes_or_no":
-            after_view = full_prompt.split("[보기]")[1]
-            before_question = after_view.split("질문:")[0]
+            parts = full_prompt.split(_lbl_options, 1)
+            after_view = parts[1] if len(parts) > 1 else ""
+            before_question = after_view.split(_lbl_question)[0]
 
             if mode == "image":
                 marker = image_url_list[0] if image_url_list else ""
                 if marker and marker in before_question:
                     statement_before = before_question.split(marker)[0].strip("\n")
                 else:
-                    statement_before = "[대화] 내 user의 마지막 발화를 기반으로 user가 선호하는 의상 이미지는 다음과 같다."
+                    statement_before = (
+                        "Based on the user's last utterance in [Dialogue], the outfit image that user prefers is as follows."
+                        if lang == "en" else
+                        "[대화] 내 user의 마지막 발화를 기반으로 user가 선호하는 의상 이미지는 다음과 같다."
+                    )
                 msgs = build_messages_task5_yn_image(
                     conversation=conversation,
                     option_image_url=marker,
                     statement_text_before_image=statement_before,
                     question_text_after_view=question_text,
+                    lang=lang,
                 )
                 return msgs, "image"
             else:
@@ -403,15 +467,21 @@ def build_messages_dispatch(
                 if tag_marker and tag_marker in before_question:
                     statement_before = before_question.split(tag_marker)[0].strip("\n")
                 else:
-                    statement_before = "[대화] 내 user의 마지막 발화를 기반으로 user가 선호하는 의상 정보는 다음과 같다."
+                    statement_before = (
+                        "Based on the user's last utterance in [Dialogue], the outfit information that user prefers is as follows."
+                        if lang == "en" else
+                        "[대화] 내 user의 마지막 발화를 기반으로 user가 선호하는 의상 정보는 다음과 같다."
+                    )
                 msgs = build_messages_task5_yn_tags(
                     conversation=conversation,
                     option_tags_text=tag_marker,
                     statement_text_before_tags=statement_before,
                     question_text_after_view=question_text,
+                    lang=lang,
                 )
                 return msgs, "tags"
 
+    # ---- Task 6 ----
     if task_id == 6:
         subtype = _infer_subtype(item)
         option_texts = [_normalize_text_with_user_grammar(t, user_name) for t in (text_list or [])]
@@ -424,6 +494,7 @@ def build_messages_dispatch(
                         conversation=conversation,
                         option_texts_abcd=option_texts,
                         question_text=question_text,
+                        lang=lang,
                     )
                     return msgs, "image"
                 else:
@@ -431,6 +502,7 @@ def build_messages_dispatch(
                         conversation=conversation,
                         option_texts_abcd=option_texts,
                         question_text=question_text,
+                        lang=lang,
                     )
                     return msgs, "tags"
 
@@ -440,6 +512,7 @@ def build_messages_dispatch(
                         conversation=conversation,
                         view_text=view_text,
                         question_text=question_text,
+                        lang=lang,
                     )
                     return msgs, "image"
                 else:
@@ -447,6 +520,7 @@ def build_messages_dispatch(
                         conversation=conversation,
                         view_text=view_text,
                         question_text=question_text,
+                        lang=lang,
                     )
                     return msgs, "tags"
 
@@ -459,6 +533,7 @@ def build_messages_dispatch(
                         conversation=conversation,
                         option_texts_abcd=option_texts,
                         question_text=question_text,
+                        lang=lang,
                     )
                     return msgs, "image"
                 else:
@@ -467,6 +542,7 @@ def build_messages_dispatch(
                         conversation=conversation,
                         option_texts_abcd=option_texts,
                         question_text=question_text,
+                        lang=lang,
                     )
                     return msgs, "tags"
 
@@ -477,6 +553,7 @@ def build_messages_dispatch(
                         conversation=conversation,
                         view_text=view_text,
                         question_text=question_text,
+                        lang=lang,
                     )
                     return msgs, "image"
                 else:
@@ -485,14 +562,25 @@ def build_messages_dispatch(
                         conversation=conversation,
                         view_text=view_text,
                         question_text=question_text,
+                        lang=lang,
                     )
                     return msgs, "tags"
 
+    # ---- Task 7 ----
     if task_id == 7:
-        utterance_text = full_prompt.split("[발화]:")[1].split("[보기]")[0].strip()
-        special_item = '\"'+utterance_text.split("**")[1] +'\"'
-        question_text = question_text.replace("강조된 옷", special_item)
-        
+        utterance_text = ""
+        if _lbl_utterance + ":" in full_prompt:
+            after_utt = full_prompt.split(_lbl_utterance + ":")[1]
+            utterance_text = after_utt.split(_lbl_options)[0].strip()
+        elif _lbl_utterance in full_prompt:
+            after_utt = full_prompt.split(_lbl_utterance)[1]
+            utterance_text = after_utt.split(_lbl_options)[0].strip()
+
+        # Extract the bolded/emphasized item from the utterance
+        if "**" in utterance_text:
+            special_item = '"' + utterance_text.split("**")[1] + '"'
+            question_text = question_text.replace("강조된 옷", special_item)
+
         if question_type == "multiple_choice":
             if mode == "image":
                 msgs = build_messages_task7_mcq_image(
@@ -500,6 +588,7 @@ def build_messages_dispatch(
                     utterance_text=utterance_text,
                     option_image_urls_abcd=image_url_list,
                     question_text=question_text,
+                    lang=lang,
                 )
                 return msgs, "image"
             else:
@@ -508,25 +597,32 @@ def build_messages_dispatch(
                     utterance_text=utterance_text,
                     option_tags_abcd=tag_list,
                     question_text=question_text,
+                    lang=lang,
                 )
                 return msgs, "tags"
 
         if question_type == "yes_or_no":
-            after_view = full_prompt.split("[보기]")[1]
-            before_question = after_view.split("질문:")[0].strip("\n")
+            parts = full_prompt.split(_lbl_options, 1)
+            after_view = parts[1] if len(parts) > 1 else ""
+            before_question = after_view.split(_lbl_question)[0].strip("\n")
 
             if mode == "image":
                 marker = image_url_list[0] if image_url_list else ""
                 if marker and marker in before_question:
                     statement_before = before_question.split(marker)[0].strip("\n")
                 else:
-                    statement_before = "[대화]를 바탕으로 [발화]에서 강조된 의상 이미지는 다음과 같다."
+                    statement_before = (
+                        "Based on [Dialogue], the outfit image emphasized in [Utterance] is as follows."
+                        if lang == "en" else
+                        "[대화]를 바탕으로 [발화]에서 강조된 의상 이미지는 다음과 같다."
+                    )
                 msgs = build_messages_task7_yn_image(
                     conversation=conversation,
                     utterance_text=utterance_text,
                     option_image_url=marker,
                     statement_text_before_image=statement_before,
                     question_text_after_view=question_text,
+                    lang=lang,
                 )
                 return msgs, "image"
             else:
@@ -534,16 +630,22 @@ def build_messages_dispatch(
                 if tag_marker and tag_marker in before_question:
                     statement_before = before_question.split(tag_marker)[0].strip("\n")
                 else:
-                    statement_before = "[대화]를 바탕으로 [발화]에서 강조된 의상 정보는 다음과 같다."
+                    statement_before = (
+                        "Based on [Dialogue], the outfit information emphasized in [Utterance] is as follows."
+                        if lang == "en" else
+                        "[대화]를 바탕으로 [발화]에서 강조된 의상 정보는 다음과 같다."
+                    )
                 msgs = build_messages_task7_yn_tags(
                     conversation=conversation,
                     utterance_text=utterance_text,
                     option_tags_text=tag_marker,
                     statement_text_before_tags=statement_before,
                     question_text_after_view=question_text,
+                    lang=lang,
                 )
                 return msgs, "tags"
 
+    # ---- Task 8 ----
     if task_id == 8:
         conv_a = item.get("Conversation_a", []) or []
         conv_b = item.get("Conversation_b", []) or []
@@ -562,7 +664,10 @@ def build_messages_dispatch(
                 return url, tag_txt
             return str(x or ""), ""
 
-        question_text = question_text if mode == "image" else question_text.replace("의상 이미지", "의상 정보")
+        if lang == "en":
+            question_text = question_text.replace("의상 이미지", "outfit image").replace("의상 정보", "outfit information")
+        else:
+            question_text = question_text if mode == "image" else question_text.replace("의상 이미지", "의상 정보")
 
         if conv_init:
             # type2
@@ -577,6 +682,7 @@ def build_messages_dispatch(
                     last_image_url=last_url,
                     option_texts_abcd=text_list,
                     question_text=question_text,
+                    lang=lang,
                 )
                 return msgs, "image"
             else:
@@ -585,9 +691,10 @@ def build_messages_dispatch(
                     conversation_a=conv_a,
                     conversation_b=conv_b,
                     conversation_c=conv_c,
-                    last_image_tags=last_tags, 
+                    last_image_tags=last_tags,
                     option_texts_abcd=text_list,
                     question_text=question_text,
+                    lang=lang,
                 )
                 return msgs, "tags"
 
@@ -608,6 +715,7 @@ def build_messages_dispatch(
                     images=img_urls,
                     option_texts_abcd=text_list,
                     question_text=question_text,
+                    lang=lang,
                 )
                 return msgs, "image"
             else:
@@ -618,6 +726,7 @@ def build_messages_dispatch(
                     image_tags=img_tags,
                     option_texts_abcd=text_list,
                     question_text=question_text,
+                    lang=lang,
                 )
                 return msgs, "tags"
 
@@ -642,11 +751,11 @@ def score_prediction(
     if question_type == "multiple_choice":
         ans = None
         for L in LETTER_LIST:
-            if f"정답: {L}" in pred_text:
+            if f"정답: {L}" in pred_text or f"Answer: {L}" in pred_text:
                 ans = L
                 break
-        if ans is None and pred_text in LETTER_LIST:
-            ans = pred_text
+        if ans is None and pred_text.strip() in LETTER_LIST:
+            ans = pred_text.strip()
         rec["pred_answer"] = ans
         rec["is_correct"] = (ans == correct_letter) if (ans and correct_letter) else False
         return rec
