@@ -70,7 +70,8 @@ def render_prompt(
 def extract_question_part(full_prompt: str) -> str:
     if not full_prompt:
         return ""
-    idx = full_prompt.find("질문:")
-    if idx >= 0:
-        return full_prompt[idx:].strip()
+    for marker in ("Question:", "질문:"):
+        idx = full_prompt.find(marker)
+        if idx >= 0:
+            return full_prompt[idx:].strip()
     return full_prompt.strip()
