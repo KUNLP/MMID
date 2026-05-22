@@ -82,6 +82,10 @@ def make_argparser() -> argparse.ArgumentParser:
     # template key selector
     p.add_argument("--template_key", type=str, default="Image", choices=["Image", "Tags"])
 
+    # benchmark language
+    p.add_argument("--lang", type=str, default="ko", choices=["ko", "en"],
+                   help="Benchmark language: 'ko' for Korean benchmark, 'en' for English benchmark")
+
     p.add_argument("--speed_debug", action="store_true",
                   help="print timing breakdown (build vs generate vs write)")
     p.add_argument("--log_every", type=int, default=10,
@@ -437,6 +441,7 @@ def run_eval(args: argparse.Namespace) -> None:
                     image_url_list=image_url_list,
                     tag_list=tag_list,
                     text_list=text_list,
+                    lang=args.lang,
                 )
                 sig = inspect.signature(build_messages_dispatch)
                 kw = {k: v for k, v in kw.items() if k in sig.parameters}
