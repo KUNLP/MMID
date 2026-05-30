@@ -6,8 +6,6 @@ We introduce the **Multi-turn Multimodal Interactive Dialogue (MMID) Benchmark**
 
 MMID is derived from [KoMMERCE](https://github.com/MMC-K/multimodal_fashion_dialog_dataset).
 
-At present, the MMID benchmark folder includes only a subset of the data samples. The full dataset will be released after the paper is accepted.
-
 MMID is released under the **Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)** license.
 
 ## Evaluating MMID with Qwen3-VL-8B-Instruct
