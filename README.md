@@ -6,7 +6,7 @@ We introduce the **Multi-turn Multimodal Interactive Dialogue (MMID) Benchmark**
 
 MMID is derived from [KoMMERCE](https://github.com/MMC-K/multimodal_fashion_dialog_dataset).
 
-MMID is released under the **Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)** license.
+MMID is released under the **Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)** license.
 
 ## Evaluating MMID with Qwen3-VL-8B-Instruct
 
